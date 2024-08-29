@@ -9,7 +9,7 @@ class GameObject:
     #@param rotation: The rotation of the GameObject in the form of a float (Degrees along Z axis only)
     #@param scale: The scale of the GameObject in the form of a tuple (x, y)
     ##
-    def __init__(self, name, position, rotation, scale, animPaths, animLoop):
+    def __init__(self, name, position, rotation, scale, animPaths, animLoop, animLength):
         self.name = name
         
         #Transform
@@ -24,7 +24,7 @@ class GameObject:
         clips = []
         for i in range(len(animPaths)):
             animPath = animPaths[i]
-            clips.append(AnimationClip(animPath, os.path.basename(animPath), animLoop[i]))
+            clips.append(AnimationClip(animPath, os.path.basename(animPath), animLoop[i], animLength[i]))
         
         #Animator
         self.animator = Animator(self, clips)
@@ -38,14 +38,34 @@ class GameObject:
 
 class AnimationClip:
     
-    def __init__(self, path, name, loop):
+    def __init__(self, path, name, loop, length):
         self.path = path
         self.name = name
         self.speedScale = 1
         self.loop = loop
+        self.length = length
         
         self.sprites = self.GetSpritesFromPath(path)
         self.current_sprite = 0
+        
+        self.animCooldown = length/len(self.sprites)
+        self.lastFrameTime = 0
+        
+    def AdvanceFrame(self):
+        #Cooldown check
+        if (self.lastFrameTime + self.animCooldown) > pygame.time.get_ticks():
+            return
+        
+        #Advance frame logic
+        self.current_sprite += 1
+        if self.current_sprite >= len(self.sprites):
+            if self.loop:
+                self.current_sprite = 0
+            else:
+                self.current_sprite = len(self.sprites) - 1    
+        
+        #Set new last frame time
+        self.lastFrameTime = pygame.time.get_ticks()   
     
     @staticmethod
     def GetSpritesFromPath(path):
@@ -69,11 +89,6 @@ class Animator:
         self.current_clip.current_sprite = 0
         
     def Update(self):
-        self.current_clip.current_sprite += 1
-        if self.current_clip.current_sprite >= len(self.current_clip.sprites):
-            if self.current_clip.loop:
-                self.current_clip.current_sprite = 0
-            else:
-                self.current_clip.current_sprite = len(self.current_clip.sprites) - 1
+        self.current_clip.AdvanceFrame()
         # self.gameObject.sprite = self.current_clip.sprites[self.current_clip.current_sprite]
         self.gameObject.sprite.image = self.current_clip.sprites[self.current_clip.current_sprite]
