@@ -1,3 +1,4 @@
+import copy
 import pygame
 import os
 
@@ -27,8 +28,18 @@ class GameObject:
         
     def Draw(self, screen):
         sprite_size = self.sprite.image.get_rect().size
-        screen.blit(pygame.transform.scale(self.sprite.image, (sprite_size[0] * self.scale[0], sprite_size[1] * self.scale[1])), self.position)
-
+        
+        #Apply scale
+        transformed_sprite = pygame.transform.scale(self.sprite.image, (int(sprite_size[0] * self.scale[0]), int(sprite_size[1] * self.scale[1])))
+        
+        #Apply rotation
+        transformed_sprite = pygame.transform.rotate(transformed_sprite, self.rotation)
+        
+        screen.blit(transformed_sprite, self.position)
+    @staticmethod
+    def Instantiate(name, original, position, rotation):
+        return GameObject(name, position, rotation, original.scale, copy.deepcopy(original.animator.GetAllClips()))
+    
 class AnimationClip:
     
     def __init__(self, path, name, loop, length):
@@ -72,13 +83,17 @@ class Animator:
         self.gameObject = gameObject
         
         self.clips = {}
-        for clip in clips:
-            self.clips[clip.name] = clip
-                    
-        self.current_clip = self.clips[clips[0].name]
+        if (len(clips) > 0):
+            for clip in clips:
+                self.clips[clip.name] = clip
+                        
+            self.current_clip = self.clips[clips[0].name]
     
     def GetClip(self, clipName):
         return self.clips[clipName]
+    
+    def GetAllClips(self):
+        return list(self.clips.values())
     
     def Play(self, clipName):
         self.current_clip = self.clips[clipName]
