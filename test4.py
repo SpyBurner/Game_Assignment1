@@ -1,19 +1,22 @@
+import json
 import pygame
 import pygame_gui
 from CustomClasses import *
 
 class Game:
-    def __init__(self):
+    def __init__(self, settingsPath):
+        settingFile = open(settingsPath)
+        settingData = json.load(settingFile)
         
         #Pygame init
         pygame.init()
         pygame.display.set_caption("Game")
         
-        pygame.time.Clock().tick(60)
+        pygame.time.Clock().tick(settingData["FPS"])
         
         #Screen init
-        SCREEN_WIDTH = 1280
-        SCREEN_HEIGHT = 720
+        SCREEN_WIDTH = settingData["SCREEN_WIDTH"]
+        SCREEN_HEIGHT = settingData["SCREEN_HEIGHT"]
         
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         
@@ -30,7 +33,6 @@ class Game:
                     run = False
             
             self.Update()
-            
             self.Draw()
             
             pygame.display.update()
@@ -46,7 +48,7 @@ class Game:
             gameObject.Draw(self.screen)
         
 if __name__ == '__main__':
-    game = Game()
+    game = Game("setting.json")
     game.run_game()
     
         
