@@ -54,12 +54,15 @@ class AnimationClip:
         self.speedScale = 1
         self.loop = loop
         self.length = length
+        self.isPlaying = False
         
         self.sprites = self.GetSpritesFromPath(path)
         self.current_sprite = 0
         
         self.animCooldown = length/len(self.sprites)
         self.lastFrameTime = 0
+        
+        self.onComplete = None
         
     def AdvanceFrame(self):
         #Cooldown check
@@ -72,10 +75,12 @@ class AnimationClip:
             if self.loop:
                 self.current_sprite = 0
             else:
-                self.current_sprite = len(self.sprites) - 1    
+                self.current_sprite = len(self.sprites) - 1
+                isplaying = False
+                self.onComplete()
         
         #Set new last frame time
-        self.lastFrameTime = pygame.time.get_ticks()   
+        self.lastFrameTime = pygame.time.get_ticks()
     
     @staticmethod
     def GetSpritesFromPath(path):
@@ -93,7 +98,7 @@ class Animator:
             for clip in clips:
                 self.clips[clip.name] = clip
                         
-            self.current_clip = self.clips[clips[0].name]
+            self.Play(clips[0].name)
     
     def GetCurrentClip(self):
         return self.current_clip
@@ -107,6 +112,7 @@ class Animator:
     def Play(self, clipName):
         self.current_clip = self.clips[clipName]
         self.current_clip.current_sprite = 0
+        self.current_clip.isplaying = True
         
     def Update(self):
         self.current_clip.AdvanceFrame()
