@@ -1,3 +1,4 @@
+import copy
 import json
 import pygame
 import pygame_gui
@@ -27,7 +28,9 @@ class Game:
         
         ##TEST SECTION
         linkWalkAnim = AnimationClip("Assets\\Sprites\\Link_gif", "Walk", True, 1000)
-        self.gameObjects["Player"] = GameObject("Player", (100, 20), 0, (5, 5), [linkWalkAnim])
+        self.gameObjects["Player"] = GameObject("Player", (-100, 20), 0, (5, 5), [linkWalkAnim])
+        
+        previousObject = self.gameObjects["Player"]
         
         timer = 0
         testCooldown = 2000
@@ -43,7 +46,17 @@ class Game:
             ##TEST SECTION
             if (timer + testCooldown < pygame.time.get_ticks()):
                 cooldownElapsed += 1
-                self.gameObjects["Player"].animator.GetClip("Walk").speedScale += 1
+
+                newPos = (previousObject.position[0] + 100, previousObject.position[1])
+                newRot = previousObject.rotation + 10
+                
+                newObject = GameObject.Instantiate("Player" + str(cooldownElapsed), previousObject, newPos, newRot)
+                
+                self.gameObjects[newObject.name] = newObject
+                newObject.animator.GetClip("Walk").speedScale = previousObject.animator.GetClip("Walk").speedScale + 1
+                
+                previousObject = newObject
+
                 timer = pygame.time.get_ticks()
             ###
             
