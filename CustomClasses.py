@@ -95,6 +95,9 @@ class Animator:
                         
             self.current_clip = self.clips[clips[0].name]
     
+    def GetCurrentClip(self):
+        return self.current_clip
+    
     def GetClip(self, clipName):
         return self.clips[clipName]
     
