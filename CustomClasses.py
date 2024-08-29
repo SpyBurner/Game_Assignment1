@@ -62,7 +62,7 @@ class AnimationClip:
         self.animCooldown = length/len(self.sprites)
         self.lastFrameTime = 0
         
-        self.onComplete = None
+        self.onComplete = Event()
         
     def AdvanceFrame(self):
         #Cooldown check
@@ -117,3 +117,16 @@ class Animator:
     def Update(self):
         self.current_clip.AdvanceFrame()
         self.gameObject.sprite.image = self.current_clip.sprites[self.current_clip.current_sprite]
+
+#Copilot :))
+class Event:
+    def __init__(self):
+        self.handlers = []
+
+    def __iadd__(self, handler):
+        self.handlers.append(handler)
+        return self
+
+    def __call__(self, *args, **kwargs):
+        for handler in self.handlers:
+            handler(*args, **kwargs)

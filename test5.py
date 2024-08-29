@@ -74,7 +74,7 @@ class Game:
                     newObjectName = "Zomb" + str(pygame.time.get_ticks())
                     newObject = GameObject.Instantiate(newObjectName, linkPrefab, newObjectPos, 0)
                     
-                    newObject.animator.GetClip("Idle").onComplete = lambda: self.Destroy(newObject)
+                    newObject.animator.GetClip("Idle").onComplete += lambda: self.OnZombEscape(newObject)
                     
                     self.gameObjects[newObject.name] = newObject
                     self.ZOMB_MAP[newObjectPos] = newObject
@@ -85,7 +85,11 @@ class Game:
             pygame.display.update()
             
         pygame.quit()
-        
+    
+    def OnZombEscape(self, gameObject):
+        self.Destroy(gameObject)
+        self.miss += 1
+    
     def Update(self):
         gameObjects = list(self.gameObjects.values())
         for gameObject in gameObjects:
