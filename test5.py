@@ -1,5 +1,6 @@
 import json
 import pygame
+import random
 import pygame_gui
 from CustomClasses import *
 
@@ -11,7 +12,6 @@ class Game:
         #Pygame init
         pygame.init()
         pygame.display.set_caption("Game")
-        
         pygame.time.Clock().tick(settingData["FPS"])
         
         #Screen init
@@ -21,6 +21,8 @@ class Game:
         self.tile = (-100, -100)
         self.hit = 0
         self.miss = 0
+        self.random_x = 0
+        self.random_y = 0
         
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         
@@ -37,22 +39,23 @@ class Game:
         #testCooldown = 2000
         #cooldownElapsed = 0
         ####
-
+        self.last_random_time = 0
         run = True
         while run:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.tile = self.get_tile(event.pos[0]//1, event.pos[1]//1)
                     if ((event.pos[0]-self.tile[0]) * (event.pos[0]-self.tile[0])  + (event.pos[1]-self.tile[1]) * (event.pos[1]-self.tile[1]) > 4900):
-                        self.tile = (-100, -100)
+                       
                         self.miss += 1
                     else:
+                        self.last_random_time-=5000
                         self.hit+=1
                         
 
-            
+            self.get_random_xy_every_5_seconds()
+            self.tile = self.CIRCLE_COORDINATE[self.random_x][self.random_y]
             ##TEST SECTION
                 #if (timer + testCooldown < pygame.time.get_ticks()):
                 #    cooldownElapsed += 1
@@ -119,6 +122,19 @@ class Game:
     
         # Blit (draw) the text onto the screen
         self.screen.blit(text_surface, text_rect)
+
+    def get_random_xy_every_5_seconds(self):
+        current_time = pygame.time.get_ticks()  # Get current time in milliseconds
+
+        # Check if 5 seconds (5000 ms) have passed since the last update
+        if current_time - self.last_random_time >= 5000:
+            # Update last random time
+            self.last_random_time = current_time
+
+            # Generate random (x, y) in range [0, 2]
+            self.random_x = random.randint(0, 2)
+            self.random_y = random.randint(0, 2)
+
         
         
 if __name__ == '__main__':
