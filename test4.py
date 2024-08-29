@@ -27,8 +27,8 @@ class Game:
     def run_game(self):
         
         ##TEST SECTION
-        linkWalkAnim = AnimationClip("Assets\\Sprites\\Link_gif", "Walk", True, 1000)
-        self.gameObjects["Player"] = GameObject("Player", (-100, 20), 0, (5, 5), [linkWalkAnim])
+        linkWalkAnim = AnimationClip("Assets\\Sprites\\Link_1Sprite", "Walk", True, 1000)
+        self.gameObjects["Player"] = GameObject("Player", (50, 50), 0, (5, 5), [linkWalkAnim])
         
         previousObject = self.gameObjects["Player"]
         

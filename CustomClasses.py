@@ -35,7 +35,13 @@ class GameObject:
         #Apply rotation
         transformed_sprite = pygame.transform.rotate(transformed_sprite, self.rotation)
         
-        screen.blit(transformed_sprite, self.position)
+        offset_x = transformed_sprite.get_rect().size[0] / 2
+        offset_y = transformed_sprite.get_rect().size[1] / 2
+        
+        actualPos = (self.position[0] - offset_x, self.position[1] - offset_y)
+        
+        screen.blit(transformed_sprite, actualPos)
+        
     @staticmethod
     def Instantiate(name, original, position, rotation):
         return GameObject(name, position, rotation, original.scale, copy.deepcopy(original.animator.GetAllClips()))
