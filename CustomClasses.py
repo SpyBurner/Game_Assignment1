@@ -9,7 +9,7 @@ class GameObject:
     #@param rotation: The rotation of the GameObject in the form of a float (Degrees along Z axis only)
     #@param scale: The scale of the GameObject in the form of a tuple (x, y)
     ##
-    def __init__(self, name, position, rotation, scale, animPaths, animLoop, animLength):
+    def __init__(self, name, position, rotation, scale, animClips):
         self.name = name
         
         #Transform
@@ -19,15 +19,8 @@ class GameObject:
         
         #Sprite
         self.sprite = pygame.sprite.Sprite()
-        
-        ##Load clips for animator
-        clips = []
-        for i in range(len(animPaths)):
-            animPath = animPaths[i]
-            clips.append(AnimationClip(animPath, os.path.basename(animPath), animLoop[i], animLength[i]))
-        
         #Animator
-        self.animator = Animator(self, clips)
+        self.animator = Animator(self, animClips)
 
     def Update(self):
         self.animator.Update()
@@ -53,7 +46,7 @@ class AnimationClip:
         
     def AdvanceFrame(self):
         #Cooldown check
-        if (self.lastFrameTime + self.animCooldown) > pygame.time.get_ticks():
+        if (self.lastFrameTime + self.animCooldown / self.speedScale) > pygame.time.get_ticks():
             return
         
         #Advance frame logic
@@ -84,11 +77,13 @@ class Animator:
                     
         self.current_clip = self.clips[clips[0].name]
     
+    def GetClip(self, clipName):
+        return self.clips[clipName]
+    
     def Play(self, clipName):
         self.current_clip = self.clips[clipName]
         self.current_clip.current_sprite = 0
         
     def Update(self):
         self.current_clip.AdvanceFrame()
-        # self.gameObject.sprite = self.current_clip.sprites[self.current_clip.current_sprite]
         self.gameObject.sprite.image = self.current_clip.sprites[self.current_clip.current_sprite]
