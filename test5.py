@@ -19,6 +19,8 @@ class Game:
         SCREEN_HEIGHT = settingData["SCREEN_HEIGHT"]
         self.CIRCLE_COORDINATE = [[(100, 150), (250, 150), (400, 150)], [(100, 300), (250, 300), (400, 300)], [(100, 450), (250, 450), (400, 450)]]        
         self.tile = (-100, -100)
+        self.hit = 0
+        self.miss = 0
         
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         
@@ -45,7 +47,9 @@ class Game:
                     self.tile = self.get_tile(event.pos[0]//1, event.pos[1]//1)
                     if ((event.pos[0]-self.tile[0]) * (event.pos[0]-self.tile[0])  + (event.pos[1]-self.tile[1]) * (event.pos[1]-self.tile[1]) > 4900):
                         self.tile = (-100, -100)
-                        
+                        self.miss += 1
+                    else:
+                        self.hit+=1
                         
 
             
@@ -59,6 +63,7 @@ class Game:
             self.Update()
             self.Draw()
             pygame.draw.circle(self.screen, (255, 0, 0), self.tile, 70)
+            self.draw_text_in_top_margin(str(self.hit)+":"+str(self.miss))
             pygame.display.update()
             
         pygame.quit()
@@ -100,6 +105,20 @@ class Game:
 
         return self.CIRCLE_COORDINATE[r][c]
         
+    def draw_text_in_top_margin(self, text):
+        # Define font and size
+        font = pygame.font.SysFont(None, 40)  # Default font with size 40
+    
+        # Render the text
+        text_surface = font.render(text, True, (0, 0, 0))  # White color text
+    
+        # Calculate the position to center the text horizontally
+        screen_width = self.screen.get_width()
+        margin_top_bottom = 100
+        text_rect = text_surface.get_rect(center=(screen_width // 2, margin_top_bottom // 2))
+    
+        # Blit (draw) the text onto the screen
+        self.screen.blit(text_surface, text_rect)
         
         
 if __name__ == '__main__':
