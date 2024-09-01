@@ -1,3 +1,4 @@
+import copy
 import pygame
 import os
 
@@ -27,8 +28,24 @@ class GameObject:
         
     def Draw(self, screen):
         sprite_size = self.sprite.image.get_rect().size
-        screen.blit(pygame.transform.scale(self.sprite.image, (sprite_size[0] * self.scale[0], sprite_size[1] * self.scale[1])), self.position)
-
+        
+        #Apply scale
+        transformed_sprite = pygame.transform.scale(self.sprite.image, (int(sprite_size[0] * self.scale[0]), int(sprite_size[1] * self.scale[1])))
+        
+        #Apply rotation
+        transformed_sprite = pygame.transform.rotate(transformed_sprite, self.rotation)
+        
+        offset_x = transformed_sprite.get_rect().size[0] / 2
+        offset_y = transformed_sprite.get_rect().size[1] / 2
+        
+        actualPos = (self.position[0] - offset_x, self.position[1] - offset_y)
+        
+        screen.blit(transformed_sprite, actualPos)
+        
+    @staticmethod
+    def Instantiate(name, original, position, rotation):
+        return GameObject(name, position, rotation, original.scale, copy.deepcopy(original.animator.GetAllClips()))
+    
 class AnimationClip:
     
     def __init__(self, path, name, loop, length):
@@ -37,12 +54,15 @@ class AnimationClip:
         self.speedScale = 1
         self.loop = loop
         self.length = length
+        self.isPlaying = False
         
         self.sprites = self.GetSpritesFromPath(path)
         self.current_sprite = 0
         
         self.animCooldown = length/len(self.sprites)
         self.lastFrameTime = 0
+        
+        self.onComplete = Event()
         
     def AdvanceFrame(self):
         #Cooldown check
@@ -55,10 +75,12 @@ class AnimationClip:
             if self.loop:
                 self.current_sprite = 0
             else:
-                self.current_sprite = len(self.sprites) - 1    
+                self.current_sprite = len(self.sprites) - 1
+                isplaying = False
+                self.onComplete()
         
         #Set new last frame time
-        self.lastFrameTime = pygame.time.get_ticks()   
+        self.lastFrameTime = pygame.time.get_ticks()
     
     @staticmethod
     def GetSpritesFromPath(path):
@@ -72,18 +94,39 @@ class Animator:
         self.gameObject = gameObject
         
         self.clips = {}
-        for clip in clips:
-            self.clips[clip.name] = clip
-                    
-        self.current_clip = self.clips[clips[0].name]
+        if (len(clips) > 0):
+            for clip in clips:
+                self.clips[clip.name] = clip
+                        
+            self.Play(clips[0].name)
+    
+    def GetCurrentClip(self):
+        return self.current_clip
     
     def GetClip(self, clipName):
         return self.clips[clipName]
     
+    def GetAllClips(self):
+        return list(self.clips.values())
+    
     def Play(self, clipName):
         self.current_clip = self.clips[clipName]
         self.current_clip.current_sprite = 0
+        self.current_clip.isplaying = True
         
     def Update(self):
         self.current_clip.AdvanceFrame()
         self.gameObject.sprite.image = self.current_clip.sprites[self.current_clip.current_sprite]
+
+#Copilot :))
+class Event:
+    def __init__(self):
+        self.handlers = []
+
+    def __iadd__(self, handler):
+        self.handlers.append(handler)
+        return self
+
+    def __call__(self, *args, **kwargs):
+        for handler in self.handlers:
+            handler(*args, **kwargs)
