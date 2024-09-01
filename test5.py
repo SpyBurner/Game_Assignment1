@@ -27,10 +27,19 @@ class Game:
         self.random_y = 0
         
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        
+                
         #GameObject list
         self.gameObjects = {}
         
+        #Sound effect
+        self.hit_sound = pygame.mixer.Sound("Assets\\SFX\\hit.wav")
+        self.up_sound = pygame.mixer.Sound("Assets\\SFX\\up.wav")
+        self.miss_sound = pygame.mixer.Sound("Assets\\SFX\\miss.wav")
+        
+        self.hit_sound.set_volume(2)
+        self.up_sound.set_volume(2)
+        self.miss_sound.set_volume(1)
+                
     def run_game(self):
         
         ###TEST SECTION
@@ -58,11 +67,13 @@ class Game:
                     if (tile == (-1,-1) or self.SquareDistance(event, self.CIRCLE_COORDINATE[tile[0]][tile[1]]) > 4900):
                         print("miss 1: clicked out side of circle")
                         self.miss += 1
+                        self.miss_sound.play()
                     else:          
                         #Hit zomb check    
                         if (not tile in self.ZOMB_MAP):
                             print("miss 2: clicked empty tile")
                             self.miss += 1
+                            self.miss_sound.play()
                         else:
                             #Zomb is hitable check
                             zom = self.ZOMB_MAP[tile]
@@ -70,11 +81,13 @@ class Game:
                             if zom.animator.GetClip("Down").isPlaying:
                                 print("miss 3: clicked zomb late")
                                 self.miss += 1
+                                self.miss_sound.play()
                             elif zom.animator.GetClip("Hit").isPlaying:
                                 print("no action: clicked already hit zomb")
                                 continue                               
                             else:
                                 print("hit")
+                                self.hit_sound.play()
                                 zom.animator.Play("Hit")
                         
 
@@ -93,10 +106,13 @@ class Game:
                     
                     self.gameObjects[newObject.name] = newObject
                     self.ZOMB_MAP[newObjectTile] = newObject
+                    
+                    self.up_sound.play()
                 else:
                     self.last_random_time -= 5000
             self.Update()
             self.Draw()
+            
             self.draw_text_in_top_margin(str(self.hit)+":"+str(self.miss))
             pygame.display.update()
             
@@ -110,6 +126,7 @@ class Game:
         self.hit += 1
     
     def OnZombEscape(self, gameObject):
+        self.miss_sound.play()
         self.Destroy(gameObject)
         self.miss += 1
     
@@ -121,8 +138,10 @@ class Game:
     def Destroy(self, gameObject):
         if (gameObject.name in self.gameObjects):
             self.gameObjects.pop(gameObject.name)
-        if (gameObject.position in self.ZOMB_MAP):
-            self.ZOMB_MAP.pop(gameObject.position)
+            
+        tile = self.get_tile(gameObject.position[0], gameObject.position[1])  
+        if (tile in self.ZOMB_MAP):
+            self.ZOMB_MAP.pop(tile)
 
     def draw_circle_matrix(self):
         radius = 70
@@ -136,6 +155,7 @@ class Game:
             gameObject.Draw(self.screen)
         self.screen.fill((255, 255, 255))  # Fill the screen with black
         self.draw_circle_matrix()     # Draw the circle matrix
+        
         for key in self.gameObjects:
             self.gameObjects[key].Draw(self.screen)
     
