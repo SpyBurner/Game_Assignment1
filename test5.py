@@ -34,10 +34,10 @@ class Game:
     def run_game(self):
         
         ###TEST SECTION
-        linkUpAnim = AnimationClip("Assets\\Sprites\\Link_Up", "Up", False, 1000)
-        linkDownAnim = AnimationClip("Assets\\Sprites\\Link_Down", "Down", False, 1000)
-        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", False, 3000)
-        linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 1000)
+        linkUpAnim = AnimationClip("Assets\\Sprites\\Link_Up", "Up", False, 500)
+        linkDownAnim = AnimationClip("Assets\\Sprites\\Link_Down", "Down", False, 500)
+        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", False, 1000)
+        linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 500)
                 
         linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
         
@@ -93,7 +93,8 @@ class Game:
                     
                     self.gameObjects[newObject.name] = newObject
                     self.ZOMB_MAP[newObjectTile] = newObject
-                            
+                else:
+                    self.last_random_time -= 5000
             self.Update()
             self.Draw()
             self.draw_text_in_top_margin(str(self.hit)+":"+str(self.miss))
