@@ -35,8 +35,12 @@ class Game:
     def run_game(self):
         
         ###TEST SECTION
-        linkWalkAnim = AnimationClip("Assets\\Sprites\\Link_gif", "Idle", False, 3000)
-        linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkWalkAnim])
+        linkUpAnim = AnimationClip("Assets\\Sprites\\Link_Up", "Up", False, 1000)
+        linkDownAnim = AnimationClip("Assets\\Sprites\\Link_Down", "Down", False, 1000)
+        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", False, 5000)
+        linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 2000)
+                
+        linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
         
         #timer = 0
         #testCooldown = 2000
@@ -74,7 +78,10 @@ class Game:
                     newObjectName = "Zomb" + str(pygame.time.get_ticks())
                     newObject = GameObject.Instantiate(newObjectName, linkPrefab, newObjectPos, 0)
                     
-                    newObject.animator.GetClip("Idle").onComplete += lambda: self.OnZombEscape(newObject)
+                    newObject.animator.GetClip("Up").onComplete += lambda: newObject.animator.Play("Idle")
+                    newObject.animator.GetClip("Idle").onComplete += lambda: newObject.animator.Play("Down")
+                    newObject.animator.GetClip("Hit").onComplete += lambda: self.OnZombHitEnd(newObject)
+                    newObject.animator.GetClip("Down").onComplete += lambda: self.OnZombEscape(newObject)
                     
                     self.gameObjects[newObject.name] = newObject
                     self.ZOMB_MAP[newObjectPos] = newObject
@@ -85,6 +92,10 @@ class Game:
             pygame.display.update()
             
         pygame.quit()
+    
+    def OnZombHitEnd(self, gameObject):
+        self.Destroy(gameObject)
+        self.hit += 1
     
     def OnZombEscape(self, gameObject):
         self.Destroy(gameObject)
