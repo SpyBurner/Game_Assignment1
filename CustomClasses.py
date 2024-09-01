@@ -9,6 +9,7 @@ class GameObject:
     #@param position: The position of the GameObject in the form of a tuple (x, y)
     #@param rotation: The rotation of the GameObject in the form of a float (Degrees along Z axis only)
     #@param scale: The scale of the GameObject in the form of a tuple (x, y)
+    #@param animClips: List of AnimationClips
     ##
     def __init__(self, name, position, rotation, scale, animClips):
         self.name = name
@@ -66,7 +67,7 @@ class AnimationClip:
         
     def AdvanceFrame(self):
         #Cooldown check
-        if (self.lastFrameTime + self.animCooldown / self.speedScale) > pygame.time.get_ticks():
+        if not self.isPlaying or (self.lastFrameTime + self.animCooldown / self.speedScale) > pygame.time.get_ticks():
             return
         
         #Advance frame logic
@@ -76,7 +77,7 @@ class AnimationClip:
                 self.current_sprite = 0
             else:
                 self.current_sprite = len(self.sprites) - 1
-                isplaying = False
+                isPlaying = False
                 self.onComplete()
         
         #Set new last frame time
@@ -97,7 +98,9 @@ class Animator:
         if (len(clips) > 0):
             for clip in clips:
                 self.clips[clip.name] = clip
-                        
+            
+            #Fail safe assignment
+            self.current_clip = clips[0]
             self.Play(clips[0].name)
     
     def GetCurrentClip(self):
@@ -110,9 +113,13 @@ class Animator:
         return list(self.clips.values())
     
     def Play(self, clipName):
+        #Stop previous clip
+        self.current_clip.isPlaying = False
+        
+        #Play new clip
         self.current_clip = self.clips[clipName]
         self.current_clip.current_sprite = 0
-        self.current_clip.isplaying = True
+        self.current_clip.isPlaying = True
         
     def Update(self):
         self.current_clip.AdvanceFrame()

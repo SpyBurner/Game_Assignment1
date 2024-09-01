@@ -21,7 +21,6 @@ class Game:
         
         self.ZOMB_MAP = {}
         
-        self.tile = (-100, -100)
         self.hit = 0
         self.miss = 0
         self.random_x = 0
@@ -37,8 +36,8 @@ class Game:
         ###TEST SECTION
         linkUpAnim = AnimationClip("Assets\\Sprites\\Link_Up", "Up", False, 1000)
         linkDownAnim = AnimationClip("Assets\\Sprites\\Link_Down", "Down", False, 1000)
-        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", False, 5000)
-        linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 2000)
+        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", False, 3000)
+        linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 1000)
                 
         linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
         
@@ -54,27 +53,36 @@ class Game:
                     run = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     #Hit tile check
-                    self.tile = self.get_tile(event.pos[0], event.pos[1])
-                    if ((event.pos[0]-self.tile[0]) * (event.pos[0]-self.tile[0])  + (event.pos[1]-self.tile[1]) * (event.pos[1]-self.tile[1]) > 4900):
+                    tile = self.get_tile(event.pos[0], event.pos[1])            
+                            
+                    if (tile == (-1,-1) or self.SquareDistance(event, self.CIRCLE_COORDINATE[tile[0]][tile[1]]) > 4900):
+                        print("miss 1: clicked out side of circle")
                         self.miss += 1
                     else:          
                         #Hit zomb check    
-                        if (not self.tile in self.ZOMB_MAP):
+                        if (not tile in self.ZOMB_MAP):
+                            print("miss 2: clicked empty tile")
                             self.miss += 1
                         else:
                             #Zomb is hitable check
-                            zom = self.ZOMB_MAP[self.tile]
-                            if (not zom.animator.GetClip("Idle").isplaying):
+                            zom = self.ZOMB_MAP[tile]
+                            #Hitable on UP or IDLE state
+                            if zom.animator.GetClip("Down").isPlaying:
+                                print("miss 3: clicked zomb late")
                                 self.miss += 1
+                            elif zom.animator.GetClip("Hit").isPlaying:
+                                print("no action: clicked already hit zomb")
+                                continue                               
                             else:
-                                self.Destroy(zom)
-                                self.hit += 1
+                                print("hit")
+                                zom.animator.Play("Hit")
                         
 
             if (self.get_random_xy_every_5_seconds()):
-                newObjectPos = self.CIRCLE_COORDINATE[self.random_x][self.random_y]
+                newObjectTile = (self.random_x, self.random_y)
+                newObjectPos = self.CIRCLE_COORDINATE[newObjectTile[0]][newObjectTile[1]]
                 
-                if not newObjectPos in self.ZOMB_MAP:
+                if not newObjectTile in self.ZOMB_MAP:
                     newObjectName = "Zomb" + str(pygame.time.get_ticks())
                     newObject = GameObject.Instantiate(newObjectName, linkPrefab, newObjectPos, 0)
                     
@@ -84,7 +92,7 @@ class Game:
                     newObject.animator.GetClip("Down").onComplete += lambda: self.OnZombEscape(newObject)
                     
                     self.gameObjects[newObject.name] = newObject
-                    self.ZOMB_MAP[newObjectPos] = newObject
+                    self.ZOMB_MAP[newObjectTile] = newObject
                             
             self.Update()
             self.Draw()
@@ -92,6 +100,9 @@ class Game:
             pygame.display.update()
             
         pygame.quit()
+
+    def SquareDistance(self, pointA, pointB):
+        return (pointA.pos[0]-pointB[0]) * (pointA.pos[0]-pointB[0])  + (pointA.pos[1]-pointB[1]) * (pointA.pos[1]-pointB[1])
     
     def OnZombHitEnd(self, gameObject):
         self.Destroy(gameObject)
@@ -137,13 +148,13 @@ class Game:
         # Check if the (x, y) is inside the grid boundaries
         if not (margin_left_right <= x <= margin_left_right + grid_size and
                 margin_top_bottom <= y <= margin_top_bottom + grid_size):
-            return (-100,-100)  # Outside the grid
+            return (-1,-1)  # Outside the grid
 
         # Calculate the column and row based on the position inside the grid
         c = (x - margin_left_right) // tile_size
         r = (y - margin_top_bottom) // tile_size
 
-        return self.CIRCLE_COORDINATE[r][c]
+        return (r, c)
         
     def draw_text_in_top_margin(self, text):
         # Define font and size
