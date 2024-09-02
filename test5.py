@@ -43,10 +43,10 @@ class Game:
     def run_game(self):
         
         ###TEST SECTION
-        linkUpAnim = AnimationClip("Assets\\Sprites\\Link_Up", "Up", False, 500)
-        linkDownAnim = AnimationClip("Assets\\Sprites\\Link_Down", "Down", False, 500)
-        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", False, 1000)
-        linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 500)
+        linkUpAnim = AnimationClip("Assets\\Sprites\\Link_Up", "Up", False, 500, 1)
+        linkDownAnim = AnimationClip("Assets\\Sprites\\Link_Down", "Down", False, 500, 1)
+        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", True, 2000, 5)
+        linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 500, 1)
                 
         linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
         
@@ -65,7 +65,7 @@ class Game:
                     tile = self.get_tile(event.pos[0], event.pos[1])            
                             
                     if (tile == (-1,-1) or self.SquareDistance(event, self.CIRCLE_COORDINATE[tile[0]][tile[1]]) > 4900):
-                        print("miss 1: clicked out side of circle")
+                        print("miss 1: clicked out side of circles")
                         self.miss += 1
                         self.miss_sound.play()
                     else:          
