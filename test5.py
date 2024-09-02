@@ -51,7 +51,7 @@ class Game:
         ###TEST SECTION
         linkUpAnim = AnimationClip("Assets\\Sprites\\Link_Up", "Up", False, 500, 1)
         linkDownAnim = AnimationClip("Assets\\Sprites\\Link_Down", "Down", False, 500, 1)
-        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", True, 2000, 5)
+        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", True, 10000, 5)
         linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 500, 1)
                 
         linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
@@ -70,7 +70,8 @@ class Game:
                     #Hit tile check
                     tile = self.get_tile(event.pos[0], event.pos[1])            
                             
-                    if (tile == (-1,-1) or self.SquareDistance(event, self.CIRCLE_COORDINATE[tile[0]][tile[1]]) > self.radius * self.radius):
+                    if (tile == (-1,-1) 
+                    or self.SquareDistance(event, self.CIRCLE_COORDINATE[tile[0]][tile[1]]) > self.radius * self.radius):
                         print("miss 1: clicked out side of circles")
                         self.miss += 1
                         self.miss_sound.play()
@@ -89,14 +90,13 @@ class Game:
                                 self.miss += 1
                                 self.miss_sound.play()
                             elif zom.animator.GetClip("Hit").isPlaying:
-                                print("no action: clicked already hit zomb")
+                                print("no action: clicked on already hit zomb")
                                 continue                               
                             else:
                                 print("hit")
                                 self.hit_sound.play()
                                 zom.animator.Play("Hit")
                         
-
             if (self.get_random_xy_every_5_seconds()):
                 newObjectTile = (self.random_x, self.random_y)
                 newObjectPos = self.CIRCLE_COORDINATE[newObjectTile[0]][newObjectTile[1]]
@@ -105,10 +105,10 @@ class Game:
                     newObjectName = "Zomb" + str(pygame.time.get_ticks())
                     newObject = GameObject.Instantiate(newObjectName, linkPrefab, newObjectPos, 0)
                     
-                    newObject.animator.GetClip("Up").onComplete += lambda: newObject.animator.Play("Idle")
-                    newObject.animator.GetClip("Idle").onComplete += lambda: newObject.animator.Play("Down")
-                    newObject.animator.GetClip("Hit").onComplete += lambda: self.OnZombHitEnd(newObject)
-                    newObject.animator.GetClip("Down").onComplete += lambda: self.OnZombEscape(newObject)
+                    newObject.animator.GetClip("Up").onComplete += lambda obj=newObject: obj.animator.Play("Idle")
+                    newObject.animator.GetClip("Idle").onComplete += lambda obj=newObject: obj.animator.Play("Down")
+                    newObject.animator.GetClip("Hit").onComplete += lambda obj=newObject: self.OnZombHitEnd(obj)
+                    newObject.animator.GetClip("Down").onComplete += lambda obj=newObject: self.OnZombEscape(obj)
                     
                     self.gameObjects[newObject.name] = newObject
                     self.ZOMB_MAP[newObjectTile] = newObject
