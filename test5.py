@@ -43,10 +43,10 @@ class Game:
     def run_game(self):
         
         ###TEST SECTION
-        linkUpAnim = AnimationClip("Assets\\Sprites\\Link_Up", "Up", False, 500)
-        linkDownAnim = AnimationClip("Assets\\Sprites\\Link_Down", "Down", False, 500)
-        linkIdleAnim = AnimationClip("Assets\\Sprites\\Link_Idle", "Idle", False, 1000)
-        linkHitAnim = AnimationClip("Assets\\Sprites\\Link_Hit", "Hit", False, 500)
+        linkUpAnim = AnimationClip("Assets\\Sprites\\Zombie_Up", "Up", False, 500)
+        linkDownAnim = AnimationClip("Assets\\Sprites\\Zombie_down", "Down", False, 500)
+        linkIdleAnim = AnimationClip("Assets\\Sprites\\Zombie_idle", "Idle", False, 1000)
+        linkHitAnim = AnimationClip("Assets\\Sprites\\Zombie_hit", "Hit", False, 500)
                 
         linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
         
