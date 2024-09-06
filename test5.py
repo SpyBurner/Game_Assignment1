@@ -20,6 +20,9 @@ class Game:
         self.CIRCLE_COORDINATE = [[(100, 150), (250, 150), (400, 150)], [(100, 300), (250, 300), (400, 300)], [(100, 450), (250, 450), (400, 450)]]
         
         self.ZOMB_MAP = {}
+        for row in range(3):
+            for col in range(3):
+                self.ZOMB_MAP[(row, col)] = None
         
         self.hit = 0
         self.miss = 0
@@ -27,6 +30,9 @@ class Game:
         self.random_y = 0
         
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        
+        #Circles matrix init
+        self.radius = settingData["CIRCLE_RADIUS"]
                 
         #GameObject list
         self.gameObjects = {}
@@ -43,6 +49,7 @@ class Game:
     def run_game(self):
         
         ###TEST SECTION
+
         linkUpAnim = AnimationClip("Assets\\Sprites\\Zombie_Up", "Up", False, 500)
         linkDownAnim = AnimationClip("Assets\\Sprites\\Zombie_down", "Down", False, 500)
         linkIdleAnim = AnimationClip("Assets\\Sprites\\Zombie_idle", "Idle", False, 1000)
@@ -64,13 +71,14 @@ class Game:
                     #Hit tile check
                     tile = self.get_tile(event.pos[0], event.pos[1])            
                             
-                    if (tile == (-1,-1) or self.SquareDistance(event, self.CIRCLE_COORDINATE[tile[0]][tile[1]]) > 4900):
-                        print("miss 1: clicked out side of circle")
+                    if (tile == (-1,-1) 
+                    or self.SquareDistance(event, self.CIRCLE_COORDINATE[tile[0]][tile[1]]) > self.radius * self.radius):
+                        print("miss 1: clicked out side of circles")
                         self.miss += 1
                         self.miss_sound.play()
                     else:          
                         #Hit zomb check    
-                        if (not tile in self.ZOMB_MAP):
+                        if (self.ZOMB_MAP[tile] == None):
                             print("miss 2: clicked empty tile")
                             self.miss += 1
                             self.miss_sound.play()
@@ -83,33 +91,31 @@ class Game:
                                 self.miss += 1
                                 self.miss_sound.play()
                             elif zom.animator.GetClip("Hit").isPlaying:
-                                print("no action: clicked already hit zomb")
+                                print("no action: clicked on already hit zomb")
                                 continue                               
                             else:
                                 print("hit")
                                 self.hit_sound.play()
                                 zom.animator.Play("Hit")
                         
-
             if (self.get_random_xy_every_5_seconds()):
                 newObjectTile = (self.random_x, self.random_y)
                 newObjectPos = self.CIRCLE_COORDINATE[newObjectTile[0]][newObjectTile[1]]
                 
-                if not newObjectTile in self.ZOMB_MAP:
+                if self.ZOMB_MAP[newObjectTile] == None:
                     newObjectName = "Zomb" + str(pygame.time.get_ticks())
                     newObject = GameObject.Instantiate(newObjectName, linkPrefab, newObjectPos, 0)
                     
-                    newObject.animator.GetClip("Up").onComplete += lambda: newObject.animator.Play("Idle")
-                    newObject.animator.GetClip("Idle").onComplete += lambda: newObject.animator.Play("Down")
-                    newObject.animator.GetClip("Hit").onComplete += lambda: self.OnZombHitEnd(newObject)
-                    newObject.animator.GetClip("Down").onComplete += lambda: self.OnZombEscape(newObject)
+                    newObject.animator.GetClip("Up").onComplete += lambda obj=newObject: obj.animator.Play("Idle")
+                    newObject.animator.GetClip("Idle").onComplete += lambda obj=newObject: obj.animator.Play("Down")
+                    newObject.animator.GetClip("Hit").onComplete += lambda obj=newObject: self.OnZombHitEnd(obj)
+                    newObject.animator.GetClip("Down").onComplete += lambda obj=newObject: self.OnZombEscape(obj)
                     
                     self.gameObjects[newObject.name] = newObject
                     self.ZOMB_MAP[newObjectTile] = newObject
                     
                     self.up_sound.play()
-                else:
-                    self.last_random_time -= 5000
+
             self.Update()
             self.Draw()
             
@@ -140,15 +146,14 @@ class Game:
             self.gameObjects.pop(gameObject.name)
             
         tile = self.get_tile(gameObject.position[0], gameObject.position[1])  
-        if (tile in self.ZOMB_MAP):
-            self.ZOMB_MAP.pop(tile)
+        if (self.ZOMB_MAP[tile] != None):
+            self.ZOMB_MAP[tile] = None
 
     def draw_circle_matrix(self):
-        radius = 70
         for row in range(3):
             for col in range(3):
                 # Draw the circle on the screen
-                pygame.draw.circle(self.screen, (0, 0, 0), self.CIRCLE_COORDINATE[row][col], radius)
+                pygame.draw.circle(self.screen, (0, 0, 0), self.CIRCLE_COORDINATE[row][col], self.radius)
     def Draw(self):
         gameObjects = list(self.gameObjects.values())
         for gameObject in gameObjects:
@@ -192,18 +197,25 @@ class Game:
         # Blit (draw) the text onto the screen
         self.screen.blit(text_surface, text_rect)
 
+    #Only get available tiles
     def get_random_xy_every_5_seconds(self):
         current_time = pygame.time.get_ticks()  # Get current time in milliseconds
 
         # Check if 5 seconds (5000 ms) have passed since the last update
         if current_time - self.last_random_time >= 5000:
+            available_tiles = []
+            for tile, value in self.ZOMB_MAP.items():
+                if value is None:
+                    available_tiles.append(tile)
+        
+            # Generate random (x, y) from available tiles
+            if len(available_tiles) > 0:
+                self.random_x, self.random_y = random.choice(available_tiles)
+            else:
+                return False
+            
             # Update last random time
             self.last_random_time = current_time
-
-            # Generate random (x, y) in range [0, 2]
-            self.random_x = random.randint(0, 2)
-            self.random_y = random.randint(0, 2)
-
             return True
         
         return False

@@ -49,10 +49,9 @@ class GameObject:
     
 class AnimationClip:
     
-    def __init__(self, path, name, loop, length):
+    def __init__(self, path, name, loop, length, speedScale):
         self.path = path
         self.name = name
-        self.speedScale = 1
         self.loop = loop
         self.length = length
         self.isPlaying = False
@@ -60,9 +59,12 @@ class AnimationClip:
         self.sprites = self.GetSpritesFromPath(path)
         self.current_sprite = 0
         
+        self.speedScale = speedScale
         self.animCooldown = length/len(self.sprites)
-        self.lastFrameTime = 0
+        self.lastFrameTime = pygame.time.get_ticks()
+        self.startTime = pygame.time.get_ticks()
         
+        #For transition
         self.onComplete = Event()
         
     def AdvanceFrame(self):
@@ -70,14 +72,22 @@ class AnimationClip:
         if not self.isPlaying or (self.lastFrameTime + self.animCooldown / self.speedScale) > pygame.time.get_ticks():
             return
         
+        #Animation length check
+        if (self.startTime + self.length) < pygame.time.get_ticks():
+            self.isPlaying = False
+            self.onComplete()
+            return
+        
         #Advance frame logic
         self.current_sprite += 1
         if self.current_sprite >= len(self.sprites):
             if self.loop:
+                #Loop enabled
                 self.current_sprite = 0
             else:
+                #Loop disabled
                 self.current_sprite = len(self.sprites) - 1
-                isPlaying = False
+                self.isPlaying = False
                 self.onComplete()
         
         #Set new last frame time
@@ -89,6 +99,13 @@ class AnimationClip:
         for filename in os.listdir(path):
             sprites.append(pygame.image.load(os.path.join(path, filename)).convert_alpha())
         return sprites
+    
+    def Ready(self):
+        self.current_sprite = 0
+        self.isPlaying = True
+        self.startTime = pygame.time.get_ticks()
+        self.lastFrameTime = pygame.time.get_ticks() - self.animCooldown * self.speedScale
+        
 
 class Animator:
     def __init__(self, gameObject, clips):
@@ -118,8 +135,7 @@ class Animator:
         
         #Play new clip
         self.current_clip = self.clips[clipName]
-        self.current_clip.current_sprite = 0
-        self.current_clip.isPlaying = True
+        self.current_clip.Ready()
         
     def Update(self):
         self.current_clip.AdvanceFrame()
