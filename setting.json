@@ -1,5 +1,6 @@
 {
     "FPS": 60,
     "SCREEN_WIDTH": 500,
-    "SCREEN_HEIGHT": 600
+    "SCREEN_HEIGHT": 600,
+    "CIRCLE_RADIUS": 70
 }

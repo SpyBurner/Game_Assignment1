@@ -9,6 +9,7 @@ class GameObject:
     #@param position: The position of the GameObject in the form of a tuple (x, y)
     #@param rotation: The rotation of the GameObject in the form of a float (Degrees along Z axis only)
     #@param scale: The scale of the GameObject in the form of a tuple (x, y)
+    #@param animClips: List of AnimationClips
     ##
     def __init__(self, name, position, rotation, scale, animClips):
         self.name = name
@@ -48,10 +49,9 @@ class GameObject:
     
 class AnimationClip:
     
-    def __init__(self, path, name, loop, length):
+    def __init__(self, path, name, loop, length, speedScale):
         self.path = path
         self.name = name
-        self.speedScale = 1
         self.loop = loop
         self.length = length
         self.isPlaying = False
@@ -59,24 +59,35 @@ class AnimationClip:
         self.sprites = self.GetSpritesFromPath(path)
         self.current_sprite = 0
         
+        self.speedScale = speedScale
         self.animCooldown = length/len(self.sprites)
-        self.lastFrameTime = 0
+        self.lastFrameTime = pygame.time.get_ticks()
+        self.startTime = pygame.time.get_ticks()
         
+        #For transition
         self.onComplete = Event()
         
     def AdvanceFrame(self):
         #Cooldown check
-        if (self.lastFrameTime + self.animCooldown / self.speedScale) > pygame.time.get_ticks():
+        if not self.isPlaying or (self.lastFrameTime + self.animCooldown / self.speedScale) > pygame.time.get_ticks():
+            return
+        
+        #Animation length check
+        if (self.startTime + self.length) < pygame.time.get_ticks():
+            self.isPlaying = False
+            self.onComplete()
             return
         
         #Advance frame logic
         self.current_sprite += 1
         if self.current_sprite >= len(self.sprites):
             if self.loop:
+                #Loop enabled
                 self.current_sprite = 0
             else:
+                #Loop disabled
                 self.current_sprite = len(self.sprites) - 1
-                isplaying = False
+                self.isPlaying = False
                 self.onComplete()
         
         #Set new last frame time
@@ -88,6 +99,13 @@ class AnimationClip:
         for filename in os.listdir(path):
             sprites.append(pygame.image.load(os.path.join(path, filename)).convert_alpha())
         return sprites
+    
+    def Ready(self):
+        self.current_sprite = 0
+        self.isPlaying = True
+        self.startTime = pygame.time.get_ticks()
+        self.lastFrameTime = pygame.time.get_ticks() - self.animCooldown * self.speedScale
+        
 
 class Animator:
     def __init__(self, gameObject, clips):
@@ -97,7 +115,9 @@ class Animator:
         if (len(clips) > 0):
             for clip in clips:
                 self.clips[clip.name] = clip
-                        
+            
+            #Fail safe assignment
+            self.current_clip = clips[0]
             self.Play(clips[0].name)
     
     def GetCurrentClip(self):
@@ -110,9 +130,12 @@ class Animator:
         return list(self.clips.values())
     
     def Play(self, clipName):
+        #Stop previous clip
+        self.current_clip.isPlaying = False
+        
+        #Play new clip
         self.current_clip = self.clips[clipName]
-        self.current_clip.current_sprite = 0
-        self.current_clip.isplaying = True
+        self.current_clip.Ready()
         
     def Update(self):
         self.current_clip.AdvanceFrame()
