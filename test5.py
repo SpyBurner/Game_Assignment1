@@ -50,10 +50,10 @@ class Game:
         
         ###TEST SECTION
 
-        linkUpAnim = AnimationClip("Assets\\Sprites\\Zombie_Up", "Up", False, 500)
-        linkDownAnim = AnimationClip("Assets\\Sprites\\Zombie_down", "Down", False, 500)
-        linkIdleAnim = AnimationClip("Assets\\Sprites\\Zombie_idle", "Idle", False, 1000)
-        linkHitAnim = AnimationClip("Assets\\Sprites\\Zombie_hit", "Hit", False, 500)
+        linkUpAnim = AnimationClip("Assets\\Sprites\\Zombie_Up", "Up", False, 500, 1)
+        linkDownAnim = AnimationClip("Assets\\Sprites\\Zombie_down", "Down", False, 500, 1)
+        linkIdleAnim = AnimationClip("Assets\\Sprites\\Zombie_idle", "Idle", True, 3000, 3)
+        linkHitAnim = AnimationClip("Assets\\Sprites\\Zombie_hit", "Hit", False, 500, 1)
                 
         linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
         
