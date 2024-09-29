@@ -23,6 +23,10 @@ class GameObject:
         self.sprite = pygame.sprite.Sprite()
         #Animator
         self.animator = Animator(self, animClips)
+        
+        #Private 
+        self.__offset_x = 0
+        self.__offset_y = 0      
 
     def Update(self):
         self.animator.Update()
@@ -36,16 +40,33 @@ class GameObject:
         #Apply rotation
         transformed_sprite = pygame.transform.rotate(transformed_sprite, self.rotation)
         
-        offset_x = transformed_sprite.get_rect().size[0] / 2
-        offset_y = transformed_sprite.get_rect().size[1] / 2
+        self.__offset_x = transformed_sprite.get_rect().size[0] / 2
+        self.__offset_y = transformed_sprite.get_rect().size[1] / 2
         
-        actualPos = (self.position[0] - offset_x, self.position[1] - offset_y)
+        actualPos = (self.position[0] - self.__offset_x, self.position[1] - self.__offset_y)
         
         screen.blit(transformed_sprite, actualPos)
         
     @staticmethod
     def Instantiate(name, original, position, rotation):
         return GameObject(name, position, rotation, original.scale, copy.deepcopy(original.animator.GetAllClips()))
+    
+    def GetActualRect(self):
+        offset = (self.__offset_x / self.scale[0], self.__offset_y / self.scale[1])
+        actualRect = self.sprite.image.get_rect()
+        actualRect.topleft = (self.position[0] - offset[0], self.position[1] - offset[1])
+        actualRect.bottomright = (self.position[0] + offset[0], self.position[1] + offset[1])
+        
+        # actualRect = actualRect.scale_by(self.scale[0], self.scale[1])
+        
+        
+        return actualRect
+    
+    def CheckCollisionRect(self, other):
+        return self.GetActualRect().colliderect(other.GetActualRect())
+    
+    def CheckCollisionPoint(self, point):
+        return self.GetActualRect().collidepoint(point)
     
 class AnimationClip:
     
@@ -155,13 +176,19 @@ class Event:
             handler(*args, **kwargs)
 
 class Scene:
-    def __init__(self, name):
+    def __init__(self, name, initObjects):
         self.name = name
-        self.gameObjects = {}
+        self.initObjects = initObjects
+        self.gameObjects = copy.deepcopy(initObjects)
         
         self.logic = None
         
         self.OnLoad = Event()
+        self.OnLoad += self.RestoreInit
+    
+    def RestoreInit(self):
+        self.gameObjects.clear()
+        self.gameObjects = copy.deepcopy(self.initObjects)
     
     def Update(self):
         gameObjects = list(self.gameObjects.values())
@@ -185,6 +212,7 @@ class SceneManager:
         self.currentScene = self.scenes[sceneName]
         self.currentScene.OnLoad()   
     
+    #Scene logic must return a boolean, to determine if the game should continue after the scene
     def RunScene(self):
         return self.currentScene.logic()
     

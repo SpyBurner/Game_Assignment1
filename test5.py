@@ -1,5 +1,7 @@
 import json
 from math import fabs
+import time
+from xml.etree.ElementTree import tostring
 import pygame
 import random
 import pygame_gui
@@ -23,10 +25,10 @@ class Game:
         # Scenes
         self.sceneManager = SceneManager()
         
-        scene1 = Scene("Gameplay")
+        scene1 = Scene("Gameplay", {})
         scene1.logic =  lambda: self.GameplaySceneLogic(scene1)
         
-        scene2 = Scene("Restart")
+        scene2 = Scene("Restart", {})
         scene2.logic = lambda: self.RestartSceneLogic(scene2)
         
         self.sceneManager.AddScene(scene1)
@@ -66,7 +68,7 @@ class Game:
                 
         linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
         
-        last_random_time = 0
+        last_random_time = pygame.time.get_ticks()
                 
         ###Local methods
         def OnZombDestroy(gameObject):
@@ -137,6 +139,8 @@ class Game:
         ###Main logic
         run = True
         while run:
+            self.screen.fill((255, 255, 255))  # Fill the screen with white
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
@@ -199,7 +203,7 @@ class Game:
             scene.Update()
             
             #Draw
-            self.screen.fill((255, 255, 255))  # Fill the screen with white
+
             draw_circle_matrix()     # Draw the circle matrix
             
             self.draw_text_in_top_margin("Hit: " + str(hit)+" / Miss: "+str(miss), self.screen)
@@ -212,22 +216,47 @@ class Game:
         return False
     
     def RestartSceneLogic(self, scene):
-        # TODO Implement the restart scene logic
+        button_pos = self.screen.get_bounding_rect().center
+        print("button pos: " + str(button_pos[0]) + " " + str(button_pos[1]))
+        
+        restart_icon_image = AnimationClip("Assets\\Sprites\\Restart_Icon", "Restart", False, 1, 1)
+        restart_button = GameObject("RestartButton", button_pos, 0, (0.5, 0.5), [restart_icon_image])
                
+        scene.gameObjects[restart_button.name] = restart_button
+        
+        def CheckButtonClick(button, pos):
+            button_center = button.GetActualRect().center
+            print("button pos: " + str(button_center[0]) + " " + str(button_center[1]))
+            print("click: " + str(pos[0]) + " " + str(pos[1]))
+            return button.CheckCollisionPoint(pos)
+        
         run = True
         while run:
+            self.screen.fill((255, 255, 255))  # Fill the screen with white
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pygame.draw.circle(self.screen, (0, 0, 0), event.pos, 10)
+                    if CheckButtonClick(restart_button, event.pos):
+                        run = False
+                        self.sceneManager.LoadScene("Gameplay")
+                        return True
                     
-            self.screen.fill((255, 255, 255))  # Fill the screen with white
+            scene.Update()
+            
+
             self.draw_text_in_top_margin("Game Over", self.screen)
+            
+            scene.Draw(self.screen)
             
             pygame.display.update()
     
         return False
 
     def run_game(self):
+               
         run = True
         while run:
             for event in pygame.event.get():
