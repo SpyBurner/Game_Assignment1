@@ -153,3 +153,42 @@ class Event:
     def __call__(self, *args, **kwargs):
         for handler in self.handlers:
             handler(*args, **kwargs)
+
+class Scene:
+    def __init__(self, name):
+        self.name = name
+        self.gameObjects = {}
+        
+    def OnLoad(self):
+        pass
+    
+    def Update(self):
+        gameObjects = list(self.gameObjects.values())
+        for gameObject in gameObjects:
+            gameObject.Update()
+    
+    def Draw(self, screen):
+        gameObjects = list(self.gameObjects.values())
+        for gameObject in gameObjects:
+            gameObject.Draw()
+        
+class SceneManager:
+    def __init__(self):
+        self.scenes = {}
+        self.currentScene = None
+        
+    def AddScene(self, scene):
+        self.scenes[scene.name] = scene
+        
+    def LoadScene(self, sceneName):
+        self.currentScene = self.scenes[sceneName]
+        self.currentScene.OnLoad()
+        
+    def Update(self):
+        self.currentScene.Update()
+        
+    def Draw(self, screen):
+        self.currentScene.Draw(screen)
+        
+    def GetScene(self, sceneName):
+        return self.scenes[sceneName]

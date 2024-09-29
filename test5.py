@@ -52,15 +52,11 @@ class Game:
 
         linkUpAnim = AnimationClip("Assets\\Sprites\\Zombie_Up", "Up", False, 500, 1)
         linkDownAnim = AnimationClip("Assets\\Sprites\\Zombie_down", "Down", False, 500, 1)
-        linkIdleAnim = AnimationClip("Assets\\Sprites\\Zombie_idle", "Idle", True, 3000, 3)
+        linkIdleAnim = AnimationClip("Assets\\Sprites\\Zombie_idle", "Idle", True, 3000, 4.5)
         linkHitAnim = AnimationClip("Assets\\Sprites\\Zombie_hit", "Hit", False, 500, 1)
                 
         linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
         
-        #timer = 0
-        #testCooldown = 2000
-        #cooldownElapsed = 0
-        ####
         self.last_random_time = 0
         run = True
         while run:
