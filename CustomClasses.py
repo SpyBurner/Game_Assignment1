@@ -159,8 +159,9 @@ class Scene:
         self.name = name
         self.gameObjects = {}
         
-    def OnLoad(self):
-        pass
+        self.logic = None
+        
+        self.OnLoad = Event()
     
     def Update(self):
         gameObjects = list(self.gameObjects.values())
@@ -170,7 +171,7 @@ class Scene:
     def Draw(self, screen):
         gameObjects = list(self.gameObjects.values())
         for gameObject in gameObjects:
-            gameObject.Draw()
+            gameObject.Draw(screen)
         
 class SceneManager:
     def __init__(self):
@@ -182,8 +183,11 @@ class SceneManager:
         
     def LoadScene(self, sceneName):
         self.currentScene = self.scenes[sceneName]
-        self.currentScene.OnLoad()
-        
+        self.currentScene.OnLoad()   
+    
+    def RunScene(self):
+        return self.currentScene.logic()
+    
     def Update(self):
         self.currentScene.Update()
         
