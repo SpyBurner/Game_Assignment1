@@ -67,9 +67,9 @@ class Game:
         
         last_random_time = 0
                 
-        #Local methods
+        ###Local methods
         def OnZombDestroy(gameObject):
-            tile = self.get_tile(gameObject.position[0], gameObject.position[1])  
+            tile = get_tile(gameObject.position[0], gameObject.position[1])  
             if (ZOMB_MAP[tile] != None):
                 ZOMB_MAP[tile] = None       
         
@@ -106,7 +106,49 @@ class Game:
         
             # Blit (draw) the text onto the screen
             self.screen.blit(text_surface, text_rect)
-                    
+        
+        def get_tile(x, y):
+            # Define margins and grid size
+            margin_left_right = 50
+            margin_top_bottom = 100
+            grid_size = 400  # Total size of the grid excluding margins
+            tile_size = grid_size // 3  # Size of each tile (400/3)
+
+            # Check if the (x, y) is inside the grid boundaries
+            if not (margin_left_right <= x <= margin_left_right + grid_size and
+                    margin_top_bottom <= y <= margin_top_bottom + grid_size):
+                return (-1,-1)  # Outside the grid
+
+            # Calculate the column and row based on the position inside the grid
+            c = (x - margin_left_right) // tile_size
+            r = (y - margin_top_bottom) // tile_size
+
+            return (r, c)
+        
+        #Only get available tiles
+        def get_random_xy_every_5_seconds():
+            nonlocal last_random_time
+            
+            current_time = pygame.time.get_ticks()  # Get current time in milliseconds
+            # Check if 5 seconds (5000 ms) have passed since the last update
+            if current_time - last_random_time < 5000:
+                return None
+            
+            # Cooldown passed, continue
+            available_tiles = []
+            for tile, value in ZOMB_MAP.items():
+                if value is None:
+                    available_tiles.append(tile)
+        
+            # Check if there are available tiles
+            if len(available_tiles) <= 0:
+                return None
+            
+            # Update last random time
+            last_random_time = current_time
+            return random.choice(available_tiles)
+
+        ###Main logic
         run = True
         while run:
             for event in pygame.event.get():
@@ -114,7 +156,7 @@ class Game:
                     run = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     #Hit tile check
-                    tile = self.get_tile(event.pos[0], event.pos[1])            
+                    tile = get_tile(event.pos[0], event.pos[1])            
                             
                     if (tile == (-1,-1) 
                     or self.SquareDistance(event, CIRCLE_COORDINATE[tile[0]][tile[1]]) > radius * radius):
@@ -144,7 +186,7 @@ class Game:
                                 zom.animator.Play("Hit")
                                 hit += 1
                 
-            newObjectTile = self.get_random_xy_every_5_seconds(last_random_time, ZOMB_MAP)        
+            newObjectTile = get_random_xy_every_5_seconds()        
             if (newObjectTile != None):
                 newObjectPos = CIRCLE_COORDINATE[newObjectTile[0]][newObjectTile[1]]
                 
@@ -169,7 +211,7 @@ class Game:
             self.screen.fill((255, 255, 255))  # Fill the screen with black
             draw_circle_matrix()     # Draw the circle matrix
             
-            draw_text_in_top_margin(str(hit)+":"+str(miss))
+            draw_text_in_top_margin("Hit: " + str(hit)+" Miss: "+str(miss))
             
             scene.Draw(self.screen)
             
@@ -201,47 +243,7 @@ class Game:
         if (gameObject.name in scene.gameObjects):
             scene.gameObjects.pop(gameObject.name)
             return True
-        return False
-    
-    def get_tile(self, x, y):
-        # Define margins and grid size
-        margin_left_right = 50
-        margin_top_bottom = 100
-        grid_size = 400  # Total size of the grid excluding margins
-        tile_size = grid_size // 3  # Size of each tile (400/3)
-
-        # Check if the (x, y) is inside the grid boundaries
-        if not (margin_left_right <= x <= margin_left_right + grid_size and
-                margin_top_bottom <= y <= margin_top_bottom + grid_size):
-            return (-1,-1)  # Outside the grid
-
-        # Calculate the column and row based on the position inside the grid
-        c = (x - margin_left_right) // tile_size
-        r = (y - margin_top_bottom) // tile_size
-
-        return (r, c)
-        
-    #Only get available tiles
-    def get_random_xy_every_5_seconds(self, last_random_time, ZOMB_MAP):
-        current_time = pygame.time.get_ticks()  # Get current time in milliseconds
-        # Check if 5 seconds (5000 ms) have passed since the last update
-        if current_time - last_random_time < 5000:
-            return None
-        
-        # Cooldown passed, continue
-        available_tiles = []
-        for tile, value in ZOMB_MAP.items():
-            if value is None:
-                available_tiles.append(tile)
-    
-        # Check if there are available tiles
-        if len(available_tiles) <= 0:
-            return None
-        
-        # Update last random time
-        last_random_time = current_time
-        return random.choice(available_tiles)
-        
+        return False 
         
         
 if __name__ == '__main__':
