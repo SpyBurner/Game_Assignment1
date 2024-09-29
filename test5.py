@@ -1,4 +1,5 @@
 import json
+from math import fabs
 import pygame
 import random
 import pygame_gui
@@ -91,22 +92,7 @@ class Game:
                 for col in range(3):
                     # Draw the circle on the screen
                     pygame.draw.circle(self.screen, (0, 0, 0), CIRCLE_COORDINATE[row][col], radius)
-                    
-        def draw_text_in_top_margin(text):
-            # Define font and size
-            font = pygame.font.SysFont(None, 40)  # Default font with size 40
-        
-            # Render the text
-            text_surface = font.render(text, True, (0, 0, 0))  # White color text
-        
-            # Calculate the position to center the text horizontally
-            screen_width = self.screen.get_width()
-            margin_top_bottom = 100
-            text_rect = text_surface.get_rect(center=(screen_width // 2, margin_top_bottom // 2))
-        
-            # Blit (draw) the text onto the screen
-            self.screen.blit(text_surface, text_rect)
-        
+                           
         def get_tile(x, y):
             # Define margins and grid size
             margin_left_right = 50
@@ -185,7 +171,12 @@ class Game:
                                 hit_sound.play()
                                 zom.animator.Play("Hit")
                                 hit += 1
-                
+            ###Lose condition interupt
+            if (miss >= 3):
+                run = False
+                self.sceneManager.LoadScene("Restart")
+                return True
+            ###
             newObjectTile = get_random_xy_every_5_seconds()        
             if (newObjectTile != None):
                 newObjectPos = CIRCLE_COORDINATE[newObjectTile[0]][newObjectTile[1]]
@@ -208,10 +199,10 @@ class Game:
             scene.Update()
             
             #Draw
-            self.screen.fill((255, 255, 255))  # Fill the screen with black
+            self.screen.fill((255, 255, 255))  # Fill the screen with white
             draw_circle_matrix()     # Draw the circle matrix
             
-            draw_text_in_top_margin("Hit: " + str(hit)+" Miss: "+str(miss))
+            self.draw_text_in_top_margin("Hit: " + str(hit)+" / Miss: "+str(miss), self.screen)
             
             scene.Draw(self.screen)
             
@@ -222,8 +213,17 @@ class Game:
     
     def RestartSceneLogic(self, scene):
         # TODO Implement the restart scene logic
-        pass
-    
+               
+        run = True
+        while run:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                    
+            self.screen.fill((255, 255, 255))  # Fill the screen with white
+            self.draw_text_in_top_margin("Game Over", self.screen)
+            
+            pygame.display.update()
     
         return False
 
@@ -235,6 +235,21 @@ class Game:
                     run = False
             run = self.sceneManager.RunScene()
         pygame.quit()
+
+    def draw_text_in_top_margin(self, text, screen):
+        # Define font and size
+        font = pygame.font.SysFont(None, 40)  # Default font with size 40
+    
+        # Render the text
+        text_surface = font.render(text, True, (0, 0, 0))  # White color text
+    
+        # Calculate the position to center the text horizontally
+        screen_width = screen.get_width()
+        margin_top_bottom = 100
+        text_rect = text_surface.get_rect(center=(screen_width // 2, margin_top_bottom // 2))
+    
+        # Blit (draw) the text onto the screen
+        screen.blit(text_surface, text_rect)
 
     def SquareDistance(self, pointA, pointB):
         return (pointA.pos[0]-pointB[0]) * (pointA.pos[0]-pointB[0])  + (pointA.pos[1]-pointB[1]) * (pointA.pos[1]-pointB[1])
