@@ -61,12 +61,19 @@ class Game:
         miss_sound.set_volume(1)
         
         #Load all assets
-        linkUpAnim = AnimationClip("Assets\\Sprites\\Zombie_Up", "Up", False, 500, 1)
-        linkDownAnim = AnimationClip("Assets\\Sprites\\Zombie_down", "Down", False, 500, 1)
-        linkIdleAnim = AnimationClip("Assets\\Sprites\\Zombie_idle", "Idle", True, 3000, 4.5)
-        linkHitAnim = AnimationClip("Assets\\Sprites\\Zombie_hit", "Hit", False, 500, 1)
+        zombUpAnim = AnimationClip("Assets\\Sprites\\Zombie_Up", "Up", False, 500, 1)
+        zombDownAnim = AnimationClip("Assets\\Sprites\\Zombie_down", "Down", False, 500, 1)
+        zombIdleAnim = AnimationClip("Assets\\Sprites\\Zombie_idle", "Idle", True, 3000, 4.5)
+        zombHitAnim = AnimationClip("Assets\\Sprites\\Zombie_hit", "Hit", False, 500, 1)
                 
-        linkPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [linkUpAnim, linkIdleAnim, linkHitAnim, linkDownAnim])
+        zombPrefab = GameObject("prefab", (-100, -100), 0, (3, 3), [zombUpAnim, zombIdleAnim, zombHitAnim, zombDownAnim])
+        
+        flower1Anim = AnimationClip("Assets\\Sprites\\Flower1", "Flower1", True, 1000, 1)
+        flower2Anim = AnimationClip("Assets\\Sprites\\Flower2", "Flower2", True, 1000, 1)
+        flower3Anim = AnimationClip("Assets\\Sprites\\Flower3", "Flower3", True, 1000, 1)
+        
+        flowerPrefab = GameObject("flowerPrefab", (-100, -100), 0, (1, 1), [flower1Anim, flower2Anim, flower3Anim])
+        
         
         last_random_time = pygame.time.get_ticks()
                 
@@ -119,7 +126,7 @@ class Game:
             
             current_time = pygame.time.get_ticks()  # Get current time in milliseconds
             # Check if 5 seconds (5000 ms) have passed since the last update
-            if current_time - last_random_time < 5000:
+            if current_time - last_random_time < self.settingData["SPAWN_INTERVAL"]:
                 return None
             
             # Cooldown passed, continue
@@ -136,10 +143,22 @@ class Game:
             last_random_time = current_time
             return random.choice(available_tiles)
 
+        #Spawn in random background flowers
+        for i in range(self.settingData["FLOWER_COUNT"]):
+            screenSize = self.screen.get_size()
+            flowerPos = (random.randrange(0, screenSize[0]), random.randrange(0, screenSize[1]))
+            
+            newFlowerObject = GameObject.Instantiate("Flower"+str(i), flowerPrefab, flowerPos, 0)
+            
+            #Choose random sprite as single-frame animation
+            newFlowerObject.animator.Play(random.choice(newFlowerObject.animator.GetAllClips()).name)
+
+            scene.gameObjects[newFlowerObject.name] = newFlowerObject
+        
         ###Main logic
         run = True
         while run:
-            self.screen.fill((255, 255, 255))  # Fill the screen with white
+            self.screen.fill(self.settingData["GAMEPLAY_BG_COLOR"])  # Fill the screen with white
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -187,7 +206,7 @@ class Game:
                 
                 if ZOMB_MAP[newObjectTile] == None:
                     newObjectName = "Zomb" + str(pygame.time.get_ticks())
-                    newObject = GameObject.Instantiate(newObjectName, linkPrefab, newObjectPos, 0)
+                    newObject = GameObject.Instantiate(newObjectName, zombPrefab, newObjectPos, 0)
                     
                     newObject.animator.GetClip("Up").onComplete += lambda obj=newObject: obj.animator.Play("Idle")
                     newObject.animator.GetClip("Idle").onComplete += lambda obj=newObject: obj.animator.Play("Down")
