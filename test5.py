@@ -225,9 +225,10 @@ class Game:
 
             draw_circle_matrix()     # Draw the circle matrix
             
-            self.draw_text_in_top_margin("Hit: " + str(hit)+" / Miss: "+str(miss), self.screen)
+            ##self.draw_text_in_top_margin("Hit: " + str(hit)+" / Miss: "+str(miss), self.screen)
             
             scene.Draw(self.screen)
+            self.draw_text_in_top_margin("Hit: " + str(hit)+" / Miss: "+str(miss), self.screen)
             
             pygame.display.update()
             
@@ -289,7 +290,7 @@ class Game:
         font = pygame.font.SysFont(None, 40)  # Default font with size 40
     
         # Render the text
-        text_surface = font.render(text, True, (0, 0, 0))  # White color text
+        text_surface = font.render(text, True, (255, 255, 255))  # White color text
     
         # Calculate the position to center the text horizontally
         screen_width = screen.get_width()
